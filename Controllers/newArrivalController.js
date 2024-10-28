@@ -48,27 +48,19 @@ export const getOneArrival = async (req, res) => {
   }
 };
 
-//Update a new arrival
 
+
+// Update a new arrival
 export const updateArrival = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      name,
-      engineType,
-      speed,
-      year,
-      price,
-      logo,
-      image,
-      publicId,
-      logoPublicId,
-    } = req.body;
+    const { name, engineType, speed, year, price, logo, image } = req.body;
 
     const updateArrival = await newArrivalModel.findById(id);
     if (!updateArrival) {
       return res.status(404).json({ msg: "New Arrival not found" });
     }
+
     updateArrival.name = name;
     updateArrival.engineType = engineType;
     updateArrival.speed = speed;
@@ -77,13 +69,14 @@ export const updateArrival = async (req, res) => {
     updateArrival.logo = logo;
     updateArrival.image = image;
 
-    await car.save();
+    await updateArrival.save();
 
     return res.status(200).json({ msg: "New Arrival updated", updateArrival });
   } catch (error) {
     return res.status(500).json({ msg: error.message });
   }
 };
+
 
 //Delete a new arrival
 

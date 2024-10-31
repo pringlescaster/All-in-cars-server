@@ -10,7 +10,7 @@ export const addEvent = async (req, res) => {
       thirdImage,
       title,
       description,
-    });
+    }); 
 
     await newEvent.save();
     res.status(201).json({ message: "Event added successfully" });

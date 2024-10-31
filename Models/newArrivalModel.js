@@ -8,7 +8,7 @@ const newArrivalSchema = mongoose.Schema({
     
       publicId: {
         type: String,
-      },
+      }, 
     
       logo: {
         type: String,

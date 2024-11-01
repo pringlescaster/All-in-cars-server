@@ -1,0 +1,2 @@
+using mailtrap to send emails, more like confirmation email to login or sign up, 
+i used {node mailtrap\mailtrap.js} to test it in the terminal

@@ -6,7 +6,7 @@ import userRouter from "./userRouter.js"
 
 const router = Router();
 
-router.use(carRouter)
+router.use(carRouter) 
 router.use(newArrivalRouter)
 router.use(eventRouter)
 router.use(userRouter)

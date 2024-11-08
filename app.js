@@ -2,12 +2,14 @@ import express from 'express';
 import dotenv from "dotenv";
 import mongoose from 'mongoose';
 import routers from './Routers/index.js';
+import cookieParser from 'cookie-parser';
 import cors from"cors";
 
 const app = express();
 dotenv.config();
 
-app.use(express.json());
+app.use(express.json()); // allows us to parse incoming requets:req.body
+app.use(cookieParser()); // allows us to parse incoming cookies
 
 // CORS Configuration
 app.use(cors({

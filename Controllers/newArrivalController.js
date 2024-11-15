@@ -6,7 +6,7 @@ export const addRecent = async (req, res) => {
     const addRecent = new newArrivalModel({
       name,
       engineType,
-      speed,
+      speed, 
       year, 
       price, 
       logo,

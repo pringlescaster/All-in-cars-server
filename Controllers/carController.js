@@ -3,23 +3,20 @@ import carModel from "../Models/carModel.js";
 // Add a new car
 export const addCar = async (req, res) => {
   try {
-    const { name, engineType, speed, year, price, logo } = req.body;
-    let image, publicId;
+    const {image, publicId, name, engineType, speed, year, price, logo, categories, description } = req.body;
+  
 
-    if (req.file) {
-      image = req.file.path;
-      publicId = req.file.filename; // Ensure this is relevant for your model
-    }
-
-    const newCar = new carModel({
+    const newCar = new carModel({ 
       name,
       engineType,
       speed,
-      year,
+      year, 
       price,
       logo,
-      image,
-      publicId,
+      image, 
+      categories,
+      description,
+      publicId
     });
 
     await newCar.save();
@@ -67,12 +64,6 @@ export const updateCar = async (req, res) => {
       return res.status(404).json({ msg: "Car not found" });
     }
 
-    // Check if there's a new image or logo
-    if (req.file) {
-      car.image = req.file.path;
-      // Handle publicId if needed
-      car.publicId = req.file.filename; // Ensure to update publicId if needed
-    }
 
     car.name = name;
     car.engineType = engineType;
@@ -80,6 +71,10 @@ export const updateCar = async (req, res) => {
     car.year = year;
     car.price = price;
     car.logo = logo; // Ensure you handle this correctly
+    car.description= description;
+    car.categories = categories;
+    car.image = image;
+    car.publicId = publicId;
 
     await car.save();
 
@@ -95,6 +90,8 @@ export const updateCar = async (req, res) => {
         logo,
         image: car.image,
         publicId: car.publicId, // Ensure publicId is returned if needed
+        categories,
+        descriptions
       },
     });
   } catch (error) {

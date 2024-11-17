@@ -3,7 +3,7 @@ import { upload } from "../Config/multer.js";
 import { addCar, getCars, getCar, deleteCar, updateCar } from "../Controllers/carController.js";
 
 const router = Router();
-
+  
 // Create Operation (with multiple file upload)
 router.post('/car/register', upload.single('image'), addCar);
 

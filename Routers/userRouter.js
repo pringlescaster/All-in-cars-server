@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { checkAuth, forgotPassword, login, logout, resetPassword, signup, verifyEmail } from "../Controllers/userController.js";
+import { addToFavorites, checkAuth, forgotPassword, getFavorites, login, logout, removeFromFavorites, resetPassword, signup, verifyEmail } from "../Controllers/userController.js";
 import { verifyToken } from "../Middleware/verifyToken.js";
 
 const router = Router();
@@ -15,4 +15,11 @@ router.post('/reset-password/:token', resetPassword)
 
 //get 
 router.get('/check-auth', verifyToken, checkAuth)
+
+//favorites
+router.post("/favorites", verifyToken, addToFavorites)
+router.get("/favorites", verifyToken, getFavorites);
+router.delete("/favorites", verifyToken, removeFromFavorites)
+
+
 export default router;

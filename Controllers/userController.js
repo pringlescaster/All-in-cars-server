@@ -8,6 +8,7 @@ import {
   sendPasswordResetEmail,
   sendResetSuccessEmail,
 } from "../Mailtrap/email.js";
+import carModel from "../Models/carModel.js";
 
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
@@ -214,3 +215,73 @@ export const checkAuth = async (req, res) => {
     res.status(400).json({ success: false, messgae: error.message });
   }
 };
+
+export const addToFavorites = async (req, res) => {
+  const {carId} = req.body;
+  const userId = req.userId;
+
+  try {
+    const user = await userModel.findById(userId);
+    const car = await carModel.findById(carId);
+
+    if (!car) {
+      return res
+       .status(400)
+       .json({ success: false, message: "Car not found" });
+
+    }
+
+    if (user.favorites.includes(carId)) {
+      return res
+       .status(400)
+       .json({ success: false, message: "Car already in favorites" });
+    }
+
+    user.favorites.push(carId);
+    await user.save();
+
+    res
+     .status(200)
+     .json({ success: true, message: "Car added to favorites", favorites: user.favorites });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message})
+  }
+}
+
+
+export const getFavorites = async (req, res) => {
+  const userId = req.userId;
+
+  try {
+    const user = await userModel.findById(userId).populate("favorites");
+
+    if(!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.status(200).json({ success: true, favorites: user.favorites})
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+}
+
+
+export const removeFromFavorites =  async (req, res) => {
+  const {carId} = req.body;
+  const userId = req.userId;
+
+  try {
+    const user = await userModel.findById(userId);
+
+    if (!user.favorites.includes(carId)) {
+      return res.status(400).json({ success: false, message: "Car not in favorites" });
+  }
+
+    user.favorites = user.favorites.filter(fav => fav.toString() !== carId);
+        await user.save();
+
+        res.status(200).json({ success: true, message: "Car removed from favorites", favorites: user.favorites });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}

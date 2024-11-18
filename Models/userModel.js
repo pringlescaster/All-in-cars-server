@@ -29,7 +29,7 @@ const userSchema = mongoose.Schema(
     resetPasswordExpiresAt: Date,
     verificationToken: String,
     verificationTokenExpiresAt: Date,
-    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "carModel" }],
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "carModel" }, {type:mongoose.Schema.Types.ObjectId, ref: "newArrivalModel"}],
   },
   { timestamps: true }
 );

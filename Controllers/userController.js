@@ -9,6 +9,7 @@ import {
   sendResetSuccessEmail,
 } from "../Mailtrap/email.js";
 import carModel from "../Models/carModel.js";
+import newArrivalModel from "../Models/newArrivalModel.js";
 
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
@@ -284,4 +285,29 @@ export const removeFromFavorites =  async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
+}
+
+export const addToFavoritesNewArrival = async (req, res) => {
+  const {newArrivalId} = req.body;
+  const userId = req.userId;
+
+  try {
+    const user = await userModel.findById(userId);
+    const newArrival = await newArrivalModel.findById(newArrivalId);
+
+    if(!newArrival) {
+      return res.json({success: false, message: "Car not found"})
+    }
+
+    if (user.favorites.includes(newArrivalId)) {
+      return res.status(400).json({success: false, message: "Car already in favorite"})
+    }
+
+    user.favorites.push(newArrivalId);
+    await user.save();
+
+    res.status(200).json({ success: true, message: "Car added to favorites", favorites: user.favorites})
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message})
+  }
 }

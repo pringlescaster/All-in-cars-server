@@ -33,7 +33,7 @@ const carSchema = mongoose.Schema(
     },
     categories: {
       type: String,
-      enum: ["Sport Cars", "SUVS", "Sudans", "Convertibles", "Electric Cars"],
+      enum: ["New Arrivals","Sport Cars", "SUVS", "Sudans", "Convertibles", "Electric Cars"],
       required: true,
     },
     description: {

@@ -268,7 +268,7 @@ export const getFavorites = async (req, res) => {
 
 
 export const removeFromFavorites =  async (req, res) => {
-  const {carId} = req.body;
+  const {carId} = req.params;
   const userId = req.userId;
 
   try {

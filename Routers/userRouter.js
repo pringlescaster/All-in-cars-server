@@ -19,7 +19,7 @@ router.get('/check-auth', verifyToken, checkAuth)
 //favorites
 router.post("/favorites", verifyToken, addToFavorites)
 router.get("/favorites", verifyToken, getFavorites);
-router.delete("/favorites", verifyToken, removeFromFavorites)
+router.delete("/favorites/:carId", verifyToken, removeFromFavorites)
 
 
 export default router;

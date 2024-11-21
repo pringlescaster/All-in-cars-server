@@ -1,6 +1,7 @@
 import { PASSWORD_RESET_REQUEST_TEMPLATE, PASSWORD_RESET_SUCCESS_TEMPLATE, VERIFICATION_EMAIL_TEMPLATE } from "./emailTemplate.js";
 import { sender, mailtrapClient } from "./mailtrap.js";
 
+
 export const sendVerificationEmail = async (email, verificationToken) => {
     const recipent = [{ email }];
 
@@ -72,3 +73,33 @@ export const sendResetSuccessEmail = async (email) => {
         throw new Error (`Error sending password reset successs email ${error}`);
     }
 }
+
+export const sendBookingConfirmationEmail = async (userEmail, carName, date) => {
+    try {
+        const response = await mailtrapClient.send({
+            from: sender,
+            to: [{ email: userEmail }],
+            subject: "Booking Confirmation",
+            text: `Your booking for the car ${carName} on ${date} has been confirmed.`,
+        });
+        console.log("Booking confirmation email sent successfully:", response);
+    } catch (error) {
+        console.error("Error sending booking confirmation email:", error);
+        throw new Error(`Error sending booking confirmation email: ${error.message}`);
+    }
+};
+
+export const sendCompanyNotificationEmail = async (carName, userName, date) => {
+    try {
+        const response = await mailtrapClient.send({
+            from: sender,
+            to: [{ email: process.env.COMPANY_EMAIL }],
+            subject: "New Booking Notification",
+            text: `New booking for the car ${carName} by ${userName} on ${date}.`,
+        });
+        console.log("Company notification email sent successfully:", response);
+    } catch (error) {
+        console.error("Error sending company notification email:", error);
+        throw new Error(`Error sending company notification email: ${error.message}`);
+    }
+};

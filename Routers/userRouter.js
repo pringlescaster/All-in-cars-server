@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addToFavorites, checkAuth, forgotPassword, getFavorites, login, logout, removeFromFavorites, resetPassword, signup, verifyEmail } from "../Controllers/userController.js";
+import { addToFavorites, bookVisitation, checkAuth, forgotPassword, getFavorites, login, logout, removeFromFavorites, resetPassword, signup, verifyEmail } from "../Controllers/userController.js";
 import { verifyToken } from "../Middleware/verifyToken.js";
 
 const router = Router();
@@ -21,5 +21,7 @@ router.post("/favorites", verifyToken, addToFavorites)
 router.get("/favorites", verifyToken, getFavorites);
 router.delete("/favorites/:carId", verifyToken, removeFromFavorites)
 
+//booking
+router.post("/booking", verifyToken, bookVisitation)
 
 export default router;

@@ -1,4 +1,5 @@
 import userModel from "../Models/userModel.js";
+import bookingModel from "../Models/bookingModel.js";
 import bcryptjs from "bcryptjs";
 import crypto from "crypto";
 import { generateTokenAndSetCookie } from "../Utils/generateTokenAndSetCookie.js";
@@ -7,6 +8,8 @@ import {
   sendwelcomeEmail,
   sendPasswordResetEmail,
   sendResetSuccessEmail,
+  sendBookingConfirmationEmail,
+  sendCompanyNotificationEmail,
 } from "../Mailtrap/email.js";
 import carModel from "../Models/carModel.js";
 import newArrivalModel from "../Models/newArrivalModel.js";
@@ -309,5 +312,46 @@ export const addToFavoritesNewArrival = async (req, res) => {
     res.status(200).json({ success: true, message: "Car added to favorites", favorites: user.favorites})
   } catch (error) {
     res.status(500).json({ success: false, message: error.message})
+  }
+}
+
+//Add booking
+export const bookVisitation = async (req, res) => {
+  const {carId, date } = req.body;
+  const userId = req.userId;
+
+  try {
+    if(!carId || !date) {
+      return res.status(400).json({success: false, message: "All fields are required"});
+    }
+
+    //check if car exists
+    const car = await carModel.findById(carId);
+    if(!car) {
+      return res.status(400).json({success: false, message: "Car not found"});
+    }
+
+    //create booking
+    const booking = new bookingModel({
+      user: userId,
+      car: carId,
+      date: date
+    });
+
+    await booking.save();
+    const user = await userModel.findById(userId);
+
+    //send emails
+    await sendBookingConfirmationEmail(user.email, car.name, date);
+    await sendCompanyNotificationEmail(car.name, user.name, date);
+
+    res.status(201).json({
+      success: true,
+      message: "Booking created successfully",
+      booking,
+    })
+  } catch (error) {
+    console.error("Error in bookVisitation", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 }

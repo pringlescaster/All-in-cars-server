@@ -316,42 +316,50 @@ export const addToFavoritesNewArrival = async (req, res) => {
 }
 
 //Add booking
+// Add booking
 export const bookVisitation = async (req, res) => {
-  const {carId, date } = req.body;
-  const userId = req.userId;
+  const { carId, date } = req.body;
 
   try {
-    if(!carId || !date) {
-      return res.status(400).json({success: false, message: "All fields are required"});
+    if (!carId || !date) {
+      return res.status(400).json({ success: false, message: "Car ID and date are required." });
     }
 
-    //check if car exists
+    // Check if the car is already booked for the specified date
+    const existingBooking = await bookingModel.findOne({ car: carId, date });
+    if (existingBooking) {
+      return res.status(400).json({ success: false, message: "Car is already booked for this date." });
+    }
+
+    // Retrieve user details from the database using req.userId
+    const user = await userModel.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Retrieve car details from the database
     const car = await carModel.findById(carId);
-    if(!car) {
-      return res.status(400).json({success: false, message: "Car not found"});
+    if (!car) {
+      return res.status(404).json({ success: false, message: "Car not found." });
     }
 
-    //create booking
+    // Create a new booking
     const booking = new bookingModel({
-      user: userId,
-      car: carId,
-      date: date
+      car: carId, // Correct field mapping
+      user: req.userId, // Ensure `req.user` is populated correctly (e.g., via middleware)
+      date,
     });
 
     await booking.save();
-    const user = await userModel.findById(userId);
 
-    //send emails
+    // Send booking confirmation email
     await sendBookingConfirmationEmail(user.email, car.name, date);
+    // Send company notification email
     await sendCompanyNotificationEmail(car.name, user.name, date);
 
-    res.status(201).json({
-      success: true,
-      message: "Booking created successfully",
-      booking,
-    })
+    res.status(201).json({ success: true, message: "Booking created successfully.", booking });
   } catch (error) {
-    console.error("Error in bookVisitation", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Server error. Please try again later." });
   }
-}
+};

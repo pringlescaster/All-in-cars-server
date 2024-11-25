@@ -1,16 +1,16 @@
-{ 
+{
     "version": 2,
-    "name": "All-iserver",
+    "name": "All-in-cars-server",
+    "builds": [
+        {
+            "src": "app.js",
+            "use": "@vercel/node"
+        }
+    ],
     "routes": [
-        { 
+        {
             "src": "/(.*)",
             "dest": "/app.js"
         }
-    ],
-    "builds": [
-        { 
-            "src": "/app.js",
-            "use": "@vercel/node"
-        }
-    ] 
+    ]
 }

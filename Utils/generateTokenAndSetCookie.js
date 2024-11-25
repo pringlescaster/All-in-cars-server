@@ -7,7 +7,7 @@ export const generateTokenAndSetCookie = (res, userId) => {
 
   res.cookie('token', token, {
     httpOnly: true, // Make the cookie inaccessible to JavaScript
-    secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+    secure: process.env.NODE_ENV === 'production' || false, // Use secure cookies in production
     sameSite: 'strict', // Prevent the cookie from being sent with cross-site requests
     maxAge: 3600000,
   });

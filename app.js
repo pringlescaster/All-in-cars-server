@@ -13,7 +13,8 @@ app.use(cookieParser()); // allows us to parse incoming cookies
 
 // CORS Configuration
 app.use(cors({
-    origin: process.env.CLIENT_DOMAIN, // Allow this origin
+    origin: 'https://allincars-brown.vercel.app/' || 'http://localhost:3000', // Add localhost for dev
+ // Allow this origin
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // Ensure OPTIONS is included for preflight requests
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']

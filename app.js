@@ -27,6 +27,13 @@ app.use((req, res) => {
     res.status(404).send('404 - Not Found');
   });
 
+  // Custom 500
+app.use((err, req, res, next) => {
+  console.log(err.message);
+  res.status(500).json({ msg: "Something went wrong", error: err.message });
+});
+
+
 
 const port = process.env.PORT || 2000;
 mongoose.connect(process.env.MONGO_URI)
@@ -40,4 +47,6 @@ mongoose.connect(process.env.MONGO_URI)
 .catch((error) => {
     console.log("Database connection error", error);
 });
+
+export default app;
 

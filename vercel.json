@@ -1,0 +1,16 @@
+{ 
+    "version": 2,
+    "name": "All-iserver",
+    "routes": [
+        { 
+            "src": "/(.*)",
+            "dest": "/app.js"
+        }
+    ],
+    "builds": [
+        { 
+            "src": "/app.js",
+            "use": "@vercel/node"
+        }
+    ] 
+}

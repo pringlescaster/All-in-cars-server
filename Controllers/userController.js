@@ -345,8 +345,8 @@ export const bookVisitation = async (req, res) => {
 
     // Create a new booking
     const booking = new bookingModel({
-      car: carId, // Correct field mapping
-      user: req.userId, // Ensure `req.user` is populated correctly (e.g., via middleware)
+      car: carId,
+      user: req.userId,
       date,
     });
 
@@ -354,6 +354,8 @@ export const bookVisitation = async (req, res) => {
 
     // Send booking confirmation email
     await sendBookingConfirmationEmail(user.email, car.name, date);
+
+    
     // Send company notification email
     await sendCompanyNotificationEmail(car.name, user.name, date);
 

@@ -14,27 +14,28 @@ import newArrivalModel from "../Models/newArrivalModel.js";
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
 
+  let session; // To use for rollback in case of failure
   try {
     // Check if all fields are provided
     if (!email || !password || !name) {
       throw new Error("All fields are required");
     }
 
+    // Start a session for transaction (rollback in case of failure)
+    session = await userModel.startSession();
+    session.startTransaction();
+
     // Check if user already exists
-    const userAlreadyExists = await userModel.findOne({ email });
+    const userAlreadyExists = await userModel.findOne({ email }).session(session);
     if (userAlreadyExists) {
-      return res
-        .status(400)
-        .json({ success: false, message: "User already exists" });
+      throw new Error("User already exists");
     }
 
     // Hash the password
     const hashedPassword = await bcryptjs.hash(password, 10);
 
     // Generate a verification token
-    const verificationToken = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
+    const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Create a new user
     const user = new userModel({
@@ -46,13 +47,16 @@ export const signup = async (req, res) => {
     });
 
     // Save the user
-    await user.save();
+    await user.save({ session });
 
     // Generate token and set cookie
     generateTokenAndSetCookie(res, user._id);
 
     // Send verification email
     await sendVerificationEmail(user.email, verificationToken);
+
+    // Commit the transaction if everything goes fine
+    await session.commitTransaction();
 
     // Respond with success
     res.status(201).json({
@@ -61,10 +65,21 @@ export const signup = async (req, res) => {
       user: { ...user._doc, password: undefined }, // Exclude password from the response
     });
   } catch (err) {
+    if (session) {
+      // Rollback the transaction if any error occurs
+      await session.abortTransaction();
+    }
+
     // Handle errors
-    res.status(400).json({ success: false, message: err.message }); // Use 'err.message' instead
+    res.status(400).json({ success: false, message: err.message });
+  } finally {
+    if (session) {
+      // End the session
+      session.endSession();
+    }
   }
 };
+
 
 export const verifyEmail = async (req, res) => {
   const { code } = req.body;

@@ -12,15 +12,23 @@ app.use(express.json()); // allows us to parse incoming requets:req.body
 app.use(cookieParser()); // allows us to parse incoming cookies
 
 // CORS Configuration
+const allowedOrigins = [process.env.CLIENT_DOMAIN, process.env.DEV_MODE];
+
 app.use(cors({
-    origin: 'https://allincars-brown.vercel.app' || 'http://localhost:3000', // Add localhost for dev
- // Allow this origin
+    origin: function(origin, callback) {
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) { // Allow no origin for requests like CURL
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], // Ensure OPTIONS is included for preflight requests
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
-  }));
+}));
 
 app.use('/api/v1', routers);
+
 
 
 // Custom 404

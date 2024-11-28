@@ -2,7 +2,6 @@ import userModel from "../Models/userModel.js";
 import bookingModel from "../Models/bookingModel.js";
 import bcryptjs from "bcryptjs";
 import crypto from "crypto";
-import { generateTokenAndSetCookie } from "../Utils/generateTokenAndSetCookie.js";
 import { sendVerificationEmail } from "../Utils/emailTemplate/verificationEmail.js";
 import { sendWelcomeEmail } from "../Utils/emailTemplate/welcomeEmail.js";
 import { sendPasswordResetEmail } from "../Utils/emailTemplate/passwordReset.js";
@@ -10,34 +9,28 @@ import { sendBookingConfirmationEmail } from "../Utils/emailTemplate/bookingConf
 import { sendCompanyNotificationEmail } from "../Utils/emailTemplate/companyNotification.js";
 import carModel from "../Models/carModel.js";
 import newArrivalModel from "../Models/newArrivalModel.js";
+import { generateToken } from "../Utils/generateToken.js";
 
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
 
-  let session; // To use for rollback in case of failure
+  let session;
   try {
-    // Check if all fields are provided
     if (!email || !password || !name) {
       throw new Error("All fields are required");
     }
 
-    // Start a session for transaction (rollback in case of failure)
     session = await userModel.startSession();
     session.startTransaction();
 
-    // Check if user already exists
     const userAlreadyExists = await userModel.findOne({ email }).session(session);
     if (userAlreadyExists) {
       throw new Error("User already exists");
     }
 
-    // Hash the password
     const hashedPassword = await bcryptjs.hash(password, 10);
-
-    // Generate a verification token
     const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // Create a new user
     const user = new userModel({
       email,
       password: hashedPassword,
@@ -46,38 +39,28 @@ export const signup = async (req, res) => {
       verificationTokenExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
     });
 
-    // Save the user
     await user.save({ session });
+    const token = generateToken(user._id);
 
-    // Generate token and set cookie
-    generateTokenAndSetCookie(res, user._id);
-
-    // Send verification email
     await sendVerificationEmail(user.email, verificationToken);
-
-    // Commit the transaction if everything goes fine
     await session.commitTransaction();
 
-    // Respond with success
     res.status(201).json({
       success: true,
       message: "User created successfully",
-      user: { ...user._doc, password: undefined }, // Exclude password from the response
+      user: { ...user._doc, password: undefined },
+      token, // Send token in the response body
     });
   } catch (err) {
     if (session) {
-      // Rollback the transaction if any error occurs
       await session.abortTransaction();
     }
-
-    // Handle errors
     res.status(400).json({ success: false, message: err.message });
   } finally {
     if (session) {
-      // End the session
       session.endSession();
     }
-  }
+  } 
 };
 
 
@@ -130,12 +113,15 @@ export const login = async (req, res) => {
         .json({ success: false, message: "Invalid Credentials" });
     }
 
-    generateTokenAndSetCookie(res, user._id);
+    // Generate token
+    const token = generateToken(user._id);
+
     user.lastLogin = new Date();
     res.status(200).json({
       success: true,
       message: "Logged in successfully",
       user: { ...user._doc, password: undefined },
+      token, // Send token in the response body
     });
   } catch (error) {
     console.log("Error logging in", error);

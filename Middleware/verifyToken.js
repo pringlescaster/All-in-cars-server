@@ -1,16 +1,17 @@
-import jwt from 'jsonwebtoken';
+// Middleware to verify JWT token passed in the Authorization header
+import jwt from "jsonwebtoken";
 
 export const verifyToken = (req, res, next) => {
-  const token = req.cookies.token; // Get token from cookies
+  const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
-    return res.status(401).json({ success: false, message: "Unauthorized - No token provided" });
+    return res.status(401).json({ success: false, message: "Access denied. No token provided." });
   }
-  
+
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify token using secret key
-    req.userId = decoded.userId; // Store user ID from the token for further use
-    next(); // Proceed to the next middleware or route handler
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.userId;  // Ensure this matches the userId from your token payload
+    next();
   } catch (error) {
-    return res.status(401).json({ success: false, message: "Unauthorized - Invalid or expired token" });
+    res.status(400).json({ success: false, message: "Invalid token." });
   }
 };

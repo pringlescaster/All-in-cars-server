@@ -15,7 +15,7 @@ app.use(cookieParser()); // allows us to parse incoming cookies
 const allowedOrigins = [process.env.CLIENT_DOMAIN, process.env.DEV_MODE];
 
 app.use(cors({
-    origin: function (origin, callback) {
+    origin: function (origin, callback) { 
         if (allowedOrigins.indexOf(origin) !== -1 || !origin) { // Allow no origin for requests like CURL
             callback(null, true);
         } else {
@@ -30,8 +30,7 @@ app.use(cors({
 // Static CORS Configuration for Localhost Testing
 app.use(
     cors({
-        origin: "https://allincars-brown.vercel.app",
-        // origin: "http://localhost:3000", // Replace with your local frontend domain
+        origin: "https://allincars-brown.vercel.app", // Replace with your local frontend domain
         credentials: true, // Allow cookies
     })
 );

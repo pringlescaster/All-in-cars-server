@@ -30,7 +30,8 @@ app.use(cors({
 // Static CORS Configuration for Localhost Testing
 app.use(
     cors({
-        origin: "http://localhost:3000", // Replace with your local frontend domain
+        origin: "https://allincars-brown.vercel.app/",
+        // origin: "http://localhost:3000", // Replace with your local frontend domain
         credentials: true, // Allow cookies
     })
 );

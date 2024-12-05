@@ -17,6 +17,9 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    monoAccountId: {
+      type: String,
+    },
     lastLogin: {
       type: Date,
       default: Date.now,
@@ -33,6 +36,9 @@ const userSchema = mongoose.Schema(
       { type: mongoose.Schema.Types.ObjectId, ref: "carModel" },
       { type: mongoose.Schema.Types.ObjectId, ref: "newArrivalModel" },
     ],
+
+  
+  
   },
   { timestamps: true }
 );

@@ -10,6 +10,9 @@ import { sendCompanyNotificationEmail } from "../Utils/emailTemplate/companyNoti
 import carModel from "../Models/carModel.js";
 import newArrivalModel from "../Models/newArrivalModel.js";
 import { generateToken } from "../Utils/generateToken.js";
+import transactionModel from "../Models/transactionModel.js";
+import { initiateMonoAccount, getIncomeInsights, checkCreditWorthiness, getUserAccountData, getIncome } from "../Service/monoService.js";
+
 
 export const signup = async (req, res) => {
   const { name, email, password } = req.body;
@@ -40,6 +43,14 @@ export const signup = async (req, res) => {
     });
 
     await user.save({ session });
+
+    // Create Mono account and get the Mono Account ID
+    const monoResponse = await initiateMonoAccount({ name, email });
+
+    // Save the Mono Account ID in the user's record
+    user.monoAccountId = monoResponse.accountId; // Assuming `monoResponse` contains `accountId`
+    await user.save({ session });
+
     const token = generateToken(user._id);
 
     await sendVerificationEmail(user.email, verificationToken);
@@ -49,7 +60,8 @@ export const signup = async (req, res) => {
       success: true,
       message: "User created successfully",
       user: { ...user._doc, password: undefined },
-      token, // Send token in the response body
+      token,
+      mono: monoResponse,
     });
   } catch (err) {
     if (session) {
@@ -60,8 +72,9 @@ export const signup = async (req, res) => {
     if (session) {
       session.endSession();
     }
-  } 
+  }
 };
+
 
 
 export const verifyEmail = async (req, res) => {
@@ -293,6 +306,9 @@ export const removeFromFavorites = async (req, res) => {
   }
 };
 
+
+
+
 export const addToFavoritesNewArrival = async (req, res) => {
   const { newArrivalId } = req.body;
   const userId = req.userId;
@@ -326,43 +342,45 @@ export const addToFavoritesNewArrival = async (req, res) => {
   }
 };
 
-//Add booking
+
 // Add booking
 export const bookVisitation = async (req, res) => {
-  const { carId, date } = req.body;
+  const { carId, date, accountId } = req.body;
 
   try {
+    // Fetch income details to check creditworthiness
+    const incomeData = await getIncomeInsights(accountId);
+    if (!checkCreditWorthiness(incomeData)) {
+      return res.status(400).json({
+        success: false,
+        message: "User is not creditworthy for booking.",
+      });
+    }
+
+    // Validate required fields
     if (!carId || !date) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Car ID and date are required." });
+      return res.status(400).json({ success: false, message: "Car ID and date are required." });
     }
 
     // Check if the car is already booked for the specified date
     const existingBooking = await bookingModel.findOne({ car: carId, date });
     if (existingBooking) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Car is already booked for this date.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Car is already booked for this date.",
+      });
     }
 
-    // Retrieve user details from the database using req.userId
+    // Fetch the user who is trying to make the booking
     const user = await userModel.findById(req.userId);
     if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found." });
+      return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    // Retrieve car details from the database
+    // Fetch the car the user wants to book
     const car = await carModel.findById(carId);
     if (!car) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Car not found." });
+      return res.status(404).json({ success: false, message: "Car not found." });
     }
 
     // Create a new booking
@@ -371,29 +389,90 @@ export const bookVisitation = async (req, res) => {
       user: req.userId,
       date,
     });
-
     await booking.save();
 
-    // Send booking confirmation email
+    // Send booking confirmation email to the user
     await sendBookingConfirmationEmail(user.email, car.name, date);
 
-    // Send company notification email
+    // Send notification email to the company
     await sendCompanyNotificationEmail(car.name, user.name, date);
 
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Booking created successfully.",
-        booking,
-      });
+    res.status(201).json({
+      success: true,
+      message: "Booking created successfully.",
+      booking,
+    });
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Server error. Please try again later.",
-      });
+    res.status(500).json({
+      success: false,
+      message: "Server error. Please try again later.",
+    });
+  }
+};
+
+
+// //to initiate mono
+// export const initiateMono = async (req,res) => {
+//   const userId = req.userId;
+
+//   try {
+//     const user = await userModel.findById(userId);
+//     if (!user) {
+//       throw new Error("User not found");
+//     }
+
+//     const monoResponse = await initiateMonoAccount({name: user.name, email: user.email});
+//     user.monoAccountId = monoResponse.accountId;
+//     await user.save();
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Mono account initiated successfully",
+//       monoAccountId: monoResponse,
+//     })
+//   } catch (error) {
+//     res.status(400).json({ success: false, message: error.message });
+
+//   }
+// }
+
+
+//Get user account data and income details using Mono
+export const getMonoAccount = async (req, res) => {
+  try {
+    // Fetch user account data from Mono
+    const userAccountData = await getUserAccountData();
+    
+    // Get the accountId from the fetched user account data
+    const accountId = userAccountData?.data?.account_id; // Adjust based on the structure of response data
+
+    // Fetch income insights if accountId exists
+    let incomeInsights = null;
+    let income = null;
+    
+    if (accountId) {
+      // Fetch income insights
+      incomeInsights = await getIncomeInsights(accountId);
+
+      // Fetch income details
+      income = await getIncome(accountId);
+    }
+
+    // Return the user account data along with income insights and income
+    res.status(200).json({
+      success: true,
+      message: "User account data and income fetched successfully",
+      data: {
+        userAccountData,
+        incomeInsights,
+        income,
+      }, // Return all data (user account, income insights, income)
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };

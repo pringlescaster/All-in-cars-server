@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addToFavorites, bookVisitation, checkAuth, forgotPassword, getFavorites, login, logout, removeFromFavorites, resetPassword, signup, verifyEmail } from "../Controllers/userController.js";
+import { addToFavorites, getMonoAccount, bookVisitation, checkAuth, forgotPassword, getFavorites, login, logout, removeFromFavorites, resetPassword, signup, verifyEmail, } from "../Controllers/userController.js";
 import { verifyToken } from "../Middleware/verifyToken.js";
 
 const router = Router();
@@ -23,5 +23,14 @@ router.delete("/favorites/:carId", verifyToken, removeFromFavorites)
 
 //booking
 router.post("/booking", verifyToken, bookVisitation)
+
+//Mono
+router.get("/mono-account", getMonoAccount);
+// router.post("/income-insights", getIncomeInsightsData); 
+
+//Mono account initialization
+// router.post("/initiate-mono", verifyToken, initiateMono);
+
+
 
 export default router;
